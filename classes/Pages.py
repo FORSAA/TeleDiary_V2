@@ -114,17 +114,34 @@ class LoginPage(BasePage):
     async def login(self) -> HomePage:
         await self.navigate(self.url)
 
-        await self.type_text(LoginPage.LOGIN_INPUT,self.user_data["login"])
-        await self.type_text(LoginPage.PASSWORD_INPUT, self.user_data["password"])
+        await self.type_text(LoginPage.LOGIN_INPUT, self.user_data["auth_data"]["login"])
+        await self.type_text(LoginPage.PASSWORD_INPUT, self.user_data["auth_data"]["password"])
 
-        await asyncio.gather(
-            self.tab.evaluate(f'''() => {{
-                const div = document.querySelector('{LoginPage.LOGIN_BUTTON}');
-                const scope = angular.element(div).scope();
-                scope.$ctrl.login();
-            }}'''),
-            self.tab.waitForNavigation({'waitUnitl':'load'})
-        )
+        try:
+            await asyncio.gather(
+                self.tab.evaluate(f'''() => {{
+                    const div = document.querySelector('{LoginPage.LOGIN_BUTTON}');
+                    const scope = angular.element(div).scope();
+                    scope.$ctrl.login();
+                }}'''),
+                self.tab.waitForNavigation({'waitUnitl':'DOMContentLoaded','timeout':3000})
+            )
+        except TimeoutError:
+            response = {
+                'success':False,
+                'error':{
+                    'type':'TimeoutError',
+                    'message':'Ошибка авторизации.\n - Неверный логин или пароль или отказано в доступе на сайт.\n'
+                },
+                'data':{
+                    'schedule':{
+                        'type':None,
+                        'content': None,
+                        'files':None
+                    }
+                }
+            }
+            return response
         await self.security_check()
 
         return HomePage(self.tab, self.user_data)
