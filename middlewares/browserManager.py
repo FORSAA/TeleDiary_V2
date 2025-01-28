@@ -4,14 +4,14 @@ import time
 RED,RESET = '\033[91m','\033[0m'
 
 BROWSER_ARGS: dict = {
-    'headless': False,
+    'headless': True,
     'args': [
         '--disable-infobars',
         '--disable-features=DownloadBubble',
         '-disable-animations',
         '--disable-software-rasterizer',
         #'--start-fullscreen'
-    ], # , '--start-fullscreen'
+    ],
     'defaultViewport': {
         'width':1920,
         'height':1080,
@@ -38,7 +38,7 @@ class BrowserManager:
                 'url':'https://e-school.obr.lenreg.ru/authorize/login'
             }
         )
-        page = LoginPage(tab, auth_data)
+        page = LoginPage(tab, request_data)
 
         result: HomePage|dict = await page.login()
 
@@ -48,8 +48,7 @@ class BrowserManager:
             if result['error']['type']:
                 await page.tab.close()
                 return f"{RED}{result['error']['message']}{RESET}"
-        
-        await page.screenshot(Path('temp')/'user_0'/'pics', 'screen.png')
+
         await page.log_out()
         await page.tab.close()
         return "all good"

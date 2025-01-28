@@ -17,23 +17,23 @@ class BasePage():
     async def navigate(self, url:str) -> None:
         await self.tab.goto(url, {'waitUnitl':'networkidle2'})
     
-    async def click(self, selector:str, wait:bool=True) -> None:
-        if wait: await self.tab.waitForSelector(selector, {"visible":True, "timeout":2000})
+    async def click(self, selector:str) -> None:
+        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
         await self.tab.click(selector)
     
     async def type_text(self, selector:str, text:str) -> None:
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":2000})
+        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
         await self.tab.type(selector, text)
     
-    async def wait_for_element(self, selector:str, timeout:int=2000, visibility:bool=True) -> None:
+    async def wait_for_element(self, selector:str, timeout:int=5000, visibility:bool=True) -> None:
         await self.tab.waitForSelector(selector, {"visible":visibility, "timeout":timeout})
 
     async def querySelector(self, selector:str):
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":2000})
+        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
         return await self.tab.querySelector(selector)
     
     async def querySelectorAll(self, selector:str):
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":2000})
+        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
         return await self.tab.querySelectorAll(selector)
 
 class HomePage(BasePage):
@@ -131,7 +131,7 @@ class LoginPage(BasePage):
                 'success':False,
                 'error':{
                     'type':'TimeoutError',
-                    'message':'Ошибка авторизации.\n - Неверный логин или пароль или отказано в доступе на сайт.\n'
+                    'message':'Ошибка авторизации - Неверный логин/пароль или отказано в доступе на сайт по другой, неизвестной причине.\n'
                 },
                 'data':{
                     'schedule':{
