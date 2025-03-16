@@ -15,7 +15,7 @@ class BasePage():
         )
 
     async def navigate(self, url:str) -> None:
-        await self.tab.goto(url, {'waitUnitl':'networkidle2'})
+        await self.tab.goto(url, {'waitUnitl':'load'})
     
     async def click(self, selector:str) -> None:
         await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
@@ -142,6 +142,6 @@ class LoginPage(BasePage):
                 }
             }
             return response
-        await self.security_check()
 
+        await self.security_check()
         return HomePage(self.tab, self.user_data)

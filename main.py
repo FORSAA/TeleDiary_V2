@@ -18,20 +18,13 @@ TEST_REQUEST_DATA2 = {
 }
 
 async def main():
-    browser_manager = BrowserManager()
-    await browser_manager.launch_browser()
-    # print(f'Результат №1: {await browser_manager.get_homework(TEST_REQUEST_DATA1)}')
-    # print(f'Результат №2: {await browser_manager.get_homework(TEST_REQUEST_DATA2)}')
+    # print(f'Результат: {await BrowserManager.get_homework(TEST_REQUEST_DATA1)}')
 
     results = await asyncio.gather(
-        browser_manager.get_homework(TEST_REQUEST_DATA1),
-        browser_manager.get_homework(TEST_REQUEST_DATA2)
+        BrowserManager.get_homework(TEST_REQUEST_DATA1),
+        BrowserManager.get_homework(TEST_REQUEST_DATA2)
     )
-
-    for num, result in enumerate(results, start=1):
+    async for num, result in astd.enumerate(results, start=1):
         print(f'Request №{num} | result: {result}')
-
-    await asyncio.sleep(1.5)
-    await browser_manager.browser.close()
 
 asyncio.run(main())
