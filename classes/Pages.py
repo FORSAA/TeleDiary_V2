@@ -1,9 +1,12 @@
 from libs.PagesLibs import *
 
+SELECTORS_OPTIONS = {"visible":True, "timeout":5000}
+
 class BasePage():
-    def __init__(self, tab:Page, user_data:dict):
+    def __init__(self, tab:Page, user_data:dict, user_id:int):
         self.tab: Page = tab
         self.user_data: dict[str:str] = user_data
+        self.user_id: int = user_id
         self.url = None
         self.start_date = datetime.strptime("02.09.2024", "%d.%m.%Y")
 
@@ -52,52 +55,157 @@ class BasePage():
         await self.tab.goto(url, {'waitUnitl':'load'})
     
     async def click(self, selector:str) -> None:
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
+        await self.tab.waitForSelector(selector, SELECTORS_OPTIONS)
         await self.tab.click(selector)
     
     async def type_text(self, selector:str, text:str) -> None:
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
+        await self.tab.waitForSelector(selector, SELECTORS_OPTIONS)
         await self.tab.type(selector, text)
     
     async def wait_for_element(self, selector:str, timeout:int=5000, visibility:bool=True) -> None:
         await self.tab.waitForSelector(selector, {"visible":visibility, "timeout":timeout})
 
-    async def querySelector(self, selector:str):
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
+    async def xpath(self, xpath_selector:str) -> list[ElementHandle]:
+        await self.tab.waitForXPath(xpath_selector, SELECTORS_OPTIONS)
+        return await self.tab.xpath(xpath_selector)
+
+    async def querySelector(self, selector:str) -> ElementHandle:
+        await self.tab.waitForSelector(selector, SELECTORS_OPTIONS)
         return await self.tab.querySelector(selector)
     
-    async def querySelectorAll(self, selector:str):
-        await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
+    async def querySelectorAll(self, selector:str) -> list[ElementHandle]:
+        await self.tab.waitForSelector(selector, SELECTORS_OPTIONS)
         return await self.tab.querySelectorAll(selector)
-
+    
 class StudentiaryPage(BasePage):
-    async def get_data(self) -> dict:
-        await self.wait_for_element('select.week_select')
-        date = await convert_to_full_date(self.user_data['date'])
-        object_id = await get_object_id_from_date(date)
-        cur_object_id = await self.tab.querySelectorEval(
-            "select.week_select",
-            'el => el.value'
-        )
-        print(f"Date: {self.user_data['date']}\nConverted date: {date}\nCurrent object_id: {cur_object_id}\nFound object_id: {object_id}\n")
-        if not object_id==cur_object_id:
-            await self.tab.select("select.week_select", object_id)
+    def __init__(self, tab, user_data, user_id):
+        super().__init__(tab, user_data, user_id)
 
+    async def get_data(self, DOWNLOAD_PATH:str) -> dict:
 
         response = {
-            'success':True,
+            'success':None,
             'error':{
-                'type':'TimeoutError',
-                'message':'Запрос выполнен успешно!'
+                'type':None,
+                'message':None
             },
             'data':{
                 'schedule':{
                     'type':None,
                     'content': None,
                     'files':None
-                }
+                },
+                'links':[]
             }
         }
+
+        links, url_pattern = [], re.compile(r'https?://\S+')
+
+        await self.wait_for_element('select.week_select')
+        date = await convert_to_full_date(self.user_data['date'])
+        object_id = await get_object_id_from_date(date)
+
+        cur_object_id = await self.tab.querySelectorEval(
+            "select.week_select",
+            'el => el.value'
+        )
+
+        if not object_id==cur_object_id:
+            await self.tab.select("select.week_select", object_id)
+
+        try:
+            tbody:ElementHandle = (await self.xpath(f'//span[contains(text(), "{self.user_data['date']}")]/../../..'))[0]
+        except IndexError:
+            response['success'] = False
+            response['error']['type'] = 'IndexError'
+            response['error']['message'] = 'Не удалось найти элемент таблицы на странице дневника.'
+            response['data'] = {}
+
+            return response
+        
+        match = re.findall(url_pattern, await(await tbody.getProperty('textContent')).jsonValue())
+        if match:
+            links += match
+            response['data']['links'] = links
+
+        paperclips = await tbody.querySelectorAll("i.mdi-paperclip")
+        if len(paperclips)>0:
+            await self.tab.evaluate(f"""
+            (el) => {{
+                el.querySelectorAll('i.mdi-paperclip').forEach(paperclip => paperclip.click());                   
+            }}""", tbody)
+
+            await self.tab.waitForFunction(f"""(el)=> {{
+                return el.querySelectorAll('div.attachments div.attach>a').length>0;
+            }}""", {'timeout':5000}, tbody)
+
+
+            file_names:list[str] = await self.tab.evaluate(f"""(el)=>{{
+                const texts = [];
+                const links = el.querySelectorAll('div.attachments div.attach > a');
+                links.forEach((attachment, index) => {{
+                    attachment.click();
+                    if (index % 2 === 0) {{
+                        texts.push(attachment.querySelector('div.name_file').innerText);
+                    }}
+                }});
+                return texts;
+            }}""", tbody)
+            files_paths = [str(Path(DOWNLOAD_PATH)/"files"/str(file_name)) for file_name in file_names]
+            response['data']['schedule']['files'] = files_paths
+
+            await self.tab.evaluate(f"""
+            (el) => {{
+                el.querySelectorAll('i.mdi-paperclip').forEach(paperclip => paperclip.click());                   
+            }}""", tbody)
+
+
+        if self.user_data['type']=='screenshot':
+            await self.tab.evaluate(
+                f'''() => {{
+                    table = document.evaluate('//span[contains(text(), "{self.user_data['date']}")]/../../..', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    table.querySelectorAll('label.icon_dots').forEach(el => el.click());
+                }}
+                '''
+            )
+            screenshot_path = str(Path(DOWNLOAD_PATH)/"screenshots"/"schedule_screenshot.png")
+            await tbody.screenshot(
+                options={
+                    "path":screenshot_path
+                }
+            )
+            response['success'] = True
+            response['data']['schedule']['type'] = 'screenshot'
+            response['data']['schedule']['content'] = screenshot_path
+        else:
+            rows:list[ElementHandle] = (await tbody.querySelectorAll("tr"))[1:]
+            data = []
+            for row in rows:
+                les_num:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('td.num_subject'))
+                les_name:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('* > a.subject'))
+                les_task:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('* > div.three_dots')) 
+                les_time_room:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('* > div.time'))
+
+                if les_num==None: les_num = ""
+                else: les_num = les_num.strip().replace('\n', '').replace('\t', '')
+
+                if les_name==None: les_name = ""
+                else: les_name = les_name.strip().replace('\n', '').replace('\t', '')
+
+                if les_task==None: les_task = ""
+                else: les_task = les_task.strip().replace('\n', '').replace('\t', '')
+
+                if les_time_room==None: les_time_room = ""
+                else: les_time_room = les_time_room.strip().replace('\n', '').replace('\t', '')
+
+                text = f"{les_num} | {les_name.center(34)} | {les_time_room.center(23)} | {les_task}"
+                data.append(text)
+            output_string = f'\n\n{"="*150}\n\n'.join(data)
+
+            response['success'] = True
+            response['data']['schedule']['type'] = 'text'
+            response['data']['schedule']['content'] = output_string
+
         return response
 
 class HomePage(BasePage):
@@ -105,8 +213,8 @@ class HomePage(BasePage):
     #Selectors
     GO_TO_STUDENTIARY_BUTTON = 'a[ng-click="$ctrl.selectTab(tabItem)"]'
 
-    def __init__(self, tab, user_data):
-        super().__init__(tab, user_data)
+    def __init__(self, tab, user_data, user_id):
+        super().__init__(tab, user_data, user_id)
         self.url = ""
     
     async def go_to_studentiary(self) -> StudentiaryPage:
@@ -119,7 +227,7 @@ class HomePage(BasePage):
         await self.tab.evaluate(f'''() => {{
             const button = document.querySelectorAll('{HomePage.GO_TO_STUDENTIARY_BUTTON}')[6].click();
         }}''')
-        return StudentiaryPage(self.tab, self.user_data)
+        return StudentiaryPage(self.tab, self.user_data, self.user_id)
 
 class LoginPage(BasePage):
 
@@ -132,9 +240,10 @@ class LoginPage(BasePage):
     LOGIN_BUTTON = "div.primary-button"
     SECURITY_SKIP_BUTTON = "button.btn-primary"
 
-    def __init__(self, tab:Page, user_data:dict):
-        super().__init__(tab, user_data)
-        self.url = "https://e-school.obr.lenreg.ru/authorize/login"
+    def __init__(self, tab:Page, user_data:dict, user_id:int):
+        super().__init__(tab, user_data, user_id)
+        self.url:str = "https://e-school.obr.lenreg.ru/authorize/login"
+
 
 
     async def security_check(self):
@@ -177,15 +286,9 @@ class LoginPage(BasePage):
                     'type':'TimeoutError',
                     'message':'Ошибка авторизации - Неверный логин/пароль или отказано в доступе на сайт по другой, неизвестной причине.\n'
                 },
-                'data':{
-                    'schedule':{
-                        'type':None,
-                        'content': None,
-                        'files':None
-                    }
-                }
+                'data':{}
             }
             return response
 
         await self.security_check()
-        return HomePage(self.tab, self.user_data)
+        return HomePage(self.tab, self.user_data, self.user_id)

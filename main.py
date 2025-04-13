@@ -1,14 +1,14 @@
-import asyncio, os; os.system("cls")
+import asyncio, os, json; os.system("cls")
 from middlewares.browserManager import *
-from middlewares.convert_to_full_date import *
+import json
 
 TEST_AUTH_DATA = ast.literal_eval(os.getenv('TEST_AUTH_DATA'))
 
 
 TEST_REQUEST_DATA1 = {
     "auth_data" : TEST_AUTH_DATA,
-    'type' : "text",
-    'date' :  "13 сентября"
+    'type' : "screenshot",
+    'date' :  "15 апреля"
 }
 
 TEST_REQUEST_DATA2 = {
@@ -22,13 +22,16 @@ TEST_REQUEST_DATA2 = {
 
 
 async def main():
-    print(f'Результат: {await BrowserManager.get_homework(TEST_REQUEST_DATA1)}')
+    response = await BrowserManager.get_homework(TEST_REQUEST_DATA1, 465456)
+    if not isinstance(response, dict): print(f'Результат: {response}')
+    else: print(json.dumps(response, indent=4, ensure_ascii=False)); print("\n\n\n", response['data']['schedule']['content']);print("\n\n\n", response['data']['links']) 
 
-    # results = await asyncio.gather(
-    #     BrowserManager.get_homework(TEST_REQUEST_DATA1),
-    #     BrowserManager.get_homework(TEST_REQUEST_DATA2)
+    # responses = await asyncio.gather(
+    #     BrowserManager.get_homework(TEST_REQUEST_DATA1, 465456),
+    #     BrowserManager.get_homework(TEST_REQUEST_DATA2, 1854)
     # )
-    # async for num, result in astd.enumerate(results, start=1):
-    #     print(f'Request №{num} | result: {result}')
+    # async for num, response in astd.enumerate(responses, start=1):
+    #     if not isinstance(response, dict): print(f'Результат #{num}: {response}')
+    #     else: print(f"Результат №{num}", json.dumps(response, indent=4, ensure_ascii=False))
 
 asyncio.run(main())

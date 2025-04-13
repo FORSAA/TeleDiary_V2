@@ -2,7 +2,8 @@ from libs.browserManagerLibs import *
 import time
 
 RED,RESET = '\033[91m','\033[0m'
-DEBUG_MODE = True
+DEBUG_MODE = False
+DOWNLOAD_PATH = Path.cwd()/"temp"
 
 BROWSER_ARGS: dict = {
     'headless': False,
@@ -14,18 +15,22 @@ BROWSER_ARGS: dict = {
         # '--start-fullscreen'
     ],
     'defaultViewport': {
-        'width':1920,
-        'height':1080,
+        'width':3125,
+        'height':2205,
     }
 }
 
 
 class BrowserManager:
     @staticmethod
-    async def get_homework(request_data: dict):
+    async def get_homework(request_data: dict, user_id:int):
         start_time = time.time()
         browser = await launch(BROWSER_ARGS)
-        ready_time = time.time() - start_time
+        user_path = str(DOWNLOAD_PATH/f"{user_id}")
+        if not await FilesManager.check_existance(user_path):
+            await FilesManager.make_dir(DOWNLOAD_PATH, f'{user_id}')
+            await FilesManager.make_dir(user_path, "files")
+            await FilesManager.make_dir(user_path, "screenshots")
 
         tab = await browser.newPage()
         await tab.setCookie(
@@ -35,23 +40,29 @@ class BrowserManager:
                 'url': 'https://e-school.obr.lenreg.ru/authorize/login'
             }
         )
-        page = LoginPage(tab, request_data)
+        client = await tab.target.createCDPSession()
+        await client.send('Page.setDownloadBehavior', {
+            'behavior': 'allow',
+            'downloadPath':str(Path(user_path)/"files")
+        })
+        ready_time = time.time() - start_time
+        page = LoginPage(tab, request_data, user_id)
 
         login_start_time = time.time()
         result: HomePage | dict = await page.login()
         login_time = time.time() - login_start_time
 
-        if isinstance(result, HomePage):
+        work_start_time = time.time()
+        if isinstance(result, HomePage): # Если не удалось войти на сайт - False и возвращение ошибки. Ошибку обрабатывает внешняя логика в main.py.
             page: HomePage = result
         else:
             await browser.close()
-            return f"{RED}{result['error']['message']}{RESET}"
-
+            return result
         page:StudentiaryPage = await page.go_to_studentiary()
-        data = await page.get_data()
 
-        await asyncio.sleep(5)
-        await page.screenshot(Path(__file__)/".."/".."/'temp')
+        data:dict = await page.get_data(user_path)
+        await page.screenshot(DOWNLOAD_PATH/f"{user_id}"/"screenshots")
+        work_time = time.time()-work_start_time
 
         logout_start_time = time.time()
         await page.log_out()
@@ -68,10 +79,11 @@ class BrowserManager:
                 "\n\n- - - - TIMINGS - - - -\n"
                 f"+ Ready to work time: {ready_time:.2f} sec.\n"
                 f"+ Login time: {login_time:.2f} sec.\n"
+                f"+ Work time: {work_time:.2f} sec.\n"
                 f"+ Logout time: {logout_time:.2f} sec.\n"
                 f"+ Closing browser time: {close_time:.2f} sec.\n"
                 f"= = = Full time: {full_time:.2f} sec.\n"
             )
             return timings
         else:
-            return "The algorithm completed its work correctly."
+            return data
