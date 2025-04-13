@@ -5,6 +5,10 @@ class BasePage():
         self.tab: Page = tab
         self.user_data: dict[str:str] = user_data
         self.url = None
+        self.start_date = datetime.strptime("02.09.2024", "%d.%m.%Y")
+
+    LOGOUT_BUTTON = 'a[ng-click="$ctrl.logout()"]'
+    SEC_LOGOUT_BUTTON = 'button[ng-click="ctrl.yes()"]'
 
     async def screenshot(self, to_path:Path, file_name:str='screenshot.png') -> None:
         if not await FilesManager.check_existance(to_path):
@@ -13,6 +17,36 @@ class BasePage():
         await self.tab.screenshot(
             path=str(Path(to_path) / file_name)
         )
+
+    async def log_out(self):
+        try:
+            await self.tab.waitForFunction(f'''() => {{
+                const logoutLink = document.querySelector('{BasePage.LOGOUT_BUTTON}');
+                return logoutLink && angular.element(logoutLink).scope();
+            }}''', timeout=5000)
+
+            await self.tab.evaluate(f'''() => {{
+                const logoutLink = document.querySelector('{BasePage.LOGOUT_BUTTON}');
+                const scope = angular.element(logoutLink).scope();
+                if (scope && scope.$ctrl && scope.$ctrl.logout) {{
+                    scope.$ctrl.logout();
+                }}
+            }}''')
+
+            await self.tab.waitForFunction(f'''() => {{
+                const confirmButton = document.querySelector('{BasePage.SEC_LOGOUT_BUTTON}');
+                return confirmButton && angular.element(confirmButton).scope();
+            }}''', timeout=5000)
+
+            await self.tab.evaluate(f'''() => {{
+                const confirmButton = document.querySelector('{BasePage.SEC_LOGOUT_BUTTON}');
+                const scope = angular.element(confirmButton).scope();
+                if (scope && scope.ctrl && scope.ctrl.yes) {{
+                    scope.ctrl.yes();
+                }}
+            }}''')
+        except TimeoutError:
+            pass
 
     async def navigate(self, url:str) -> None:
         await self.tab.goto(url, {'waitUnitl':'load'})
@@ -36,46 +70,56 @@ class BasePage():
         await self.tab.waitForSelector(selector, {"visible":True, "timeout":5000})
         return await self.tab.querySelectorAll(selector)
 
+class StudentiaryPage(BasePage):
+    async def get_data(self) -> dict:
+        await self.wait_for_element('select.week_select')
+        date = await convert_to_full_date(self.user_data['date'])
+        object_id = await get_object_id_from_date(date)
+        cur_object_id = await self.tab.querySelectorEval(
+            "select.week_select",
+            'el => el.value'
+        )
+        print(f"Date: {self.user_data['date']}\nConverted date: {date}\nCurrent object_id: {cur_object_id}\nFound object_id: {object_id}\n")
+        if not object_id==cur_object_id:
+            await self.tab.select("select.week_select", object_id)
+
+
+        response = {
+            'success':True,
+            'error':{
+                'type':'TimeoutError',
+                'message':'Запрос выполнен успешно!'
+            },
+            'data':{
+                'schedule':{
+                    'type':None,
+                    'content': None,
+                    'files':None
+                }
+            }
+        }
+        return response
+
 class HomePage(BasePage):
 
     #Selectors
-    LOGOUT_BUTTON = 'a[ng-click="$ctrl.logout()"]'
-    SEC_LOGOUT_BUTTON = 'button[ng-click="ctrl.yes()"]'
+    GO_TO_STUDENTIARY_BUTTON = 'a[ng-click="$ctrl.selectTab(tabItem)"]'
 
     def __init__(self, tab, user_data):
         super().__init__(tab, user_data)
         self.url = ""
     
-    async def log_out(self):
-        try:
-            await self.tab.waitForFunction(f'''() => {{
-                const logoutLink = document.querySelector('{HomePage.LOGOUT_BUTTON}');
-                return logoutLink && angular.element(logoutLink).scope();
-            }}''', timeout=5000)
+    async def go_to_studentiary(self) -> StudentiaryPage:
+        await self.tab.waitForFunction(f'''() => {{
+            const buttons = document.querySelectorAll('{HomePage.GO_TO_STUDENTIARY_BUTTON}');
+            const target = buttons[6];
+            return target && angular.element(target).scope();
+        }}''', timeout=5000)
 
-            await self.tab.evaluate(f'''() => {{
-                const logoutLink = document.querySelector('{HomePage.LOGOUT_BUTTON}');
-                const scope = angular.element(logoutLink).scope();
-                if (scope && scope.$ctrl && scope.$ctrl.logout) {{
-                    scope.$ctrl.logout();
-                }}
-            }}''')
-
-            await self.tab.waitForFunction(f'''() => {{
-                const confirmButton = document.querySelector('{HomePage.SEC_LOGOUT_BUTTON}');
-                return confirmButton && angular.element(confirmButton).scope();
-            }}''', timeout=5000)
-
-            await self.tab.evaluate(f'''() => {{
-                const confirmButton = document.querySelector('{HomePage.SEC_LOGOUT_BUTTON}');
-                const scope = angular.element(confirmButton).scope();
-                if (scope && scope.ctrl && scope.ctrl.yes) {{
-                    scope.ctrl.yes();
-                }}
-            }}''')
-        except TimeoutError:
-            print('logout_button timeout error')
-
+        await self.tab.evaluate(f'''() => {{
+            const button = document.querySelectorAll('{HomePage.GO_TO_STUDENTIARY_BUTTON}')[6].click();
+        }}''')
+        return StudentiaryPage(self.tab, self.user_data)
 
 class LoginPage(BasePage):
 

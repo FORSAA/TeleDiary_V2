@@ -11,7 +11,7 @@ BROWSER_ARGS: dict = {
         '--disable-features=DownloadBubble',
         '-disable-animations',
         '--disable-software-rasterizer',
-        #'--start-fullscreen'
+        # '--start-fullscreen'
     ],
     'defaultViewport': {
         'width':1920,
@@ -46,6 +46,12 @@ class BrowserManager:
         else:
             await browser.close()
             return f"{RED}{result['error']['message']}{RESET}"
+
+        page:StudentiaryPage = await page.go_to_studentiary()
+        data = await page.get_data()
+
+        await asyncio.sleep(5)
+        await page.screenshot(Path(__file__)/".."/".."/'temp')
 
         logout_start_time = time.time()
         await page.log_out()
