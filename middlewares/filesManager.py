@@ -14,11 +14,15 @@ class FilesManager():
         await asyncio.to_thread(makedirs, dir_path)
 
     @staticmethod
+    async def rmtree(dir_path:str):
+        await asyncio.to_thread(rmtree, dir_path)
+
+    @staticmethod
     async def abs_path(addition:str='') -> str:
         return Path(FilesManager.ABS_BASE_DIR) / addition
     
     @staticmethod
-    async def list_dir(dir_path:str) -> list:
+    async def list_dir(dir_path:str) -> list[str]:
         return await asyncio.to_thread(listdir, dir_path)
     
     @staticmethod

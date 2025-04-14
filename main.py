@@ -1,6 +1,5 @@
 import asyncio, os, json; os.system("cls")
-from middlewares.browserManager import *
-import json
+from middlewares import *
 
 TEST_AUTH_DATA = ast.literal_eval(os.getenv('TEST_AUTH_DATA'))
 
@@ -8,7 +7,7 @@ TEST_AUTH_DATA = ast.literal_eval(os.getenv('TEST_AUTH_DATA'))
 TEST_REQUEST_DATA1 = {
     "auth_data" : TEST_AUTH_DATA,
     'type' : "screenshot",
-    'date' :  "15 апреля"
+    'date' :  "22 января"
 }
 
 TEST_REQUEST_DATA2 = {
@@ -22,16 +21,18 @@ TEST_REQUEST_DATA2 = {
 
 
 async def main():
-    response = await BrowserManager.get_homework(TEST_REQUEST_DATA1, 465456)
-    if not isinstance(response, dict): print(f'Результат: {response}')
-    else: print(json.dumps(response, indent=4, ensure_ascii=False)); print("\n\n\n", response['data']['schedule']['content']);print("\n\n\n", response['data']['links']) 
+    response = await BrowserManager.get_homework(TEST_REQUEST_DATA1, 55655565)
+    if response['success']:
+        print(response['data']['schedule']['content'])
+        if response['data']['schedule']['type']=='screenshot':print(set(response['data']['links']))
 
-    # responses = await asyncio.gather(
-    #     BrowserManager.get_homework(TEST_REQUEST_DATA1, 465456),
-    #     BrowserManager.get_homework(TEST_REQUEST_DATA2, 1854)
-    # )
-    # async for num, response in astd.enumerate(responses, start=1):
-    #     if not isinstance(response, dict): print(f'Результат #{num}: {response}')
-    #     else: print(f"Результат №{num}", json.dumps(response, indent=4, ensure_ascii=False))
+        if DEBUG_MODE:
+            print(json.dumps(response, indent=4, ensure_ascii=False))
+            print(response['timings'])
+    else:
+        print(f"Во время выполнения запроса возникла ошибка '{response['error']['type']}'.\nТекст ошибки: {response['error']['message']}")
+
+    await asyncio.sleep(5)
+    await FilesManager.rmtree(Path.cwd()/"temp"/"55655565")
 
 asyncio.run(main())

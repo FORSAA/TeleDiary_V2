@@ -1,6 +1,6 @@
 from libs.PagesLibs import *
 
-SELECTORS_OPTIONS = {"visible":True, "timeout":5000}
+SELECTORS_OPTIONS = {"visible":True, "timeout":10000}
 
 class BasePage():
     def __init__(self, tab:Page, user_data:dict, user_id:int):
@@ -77,6 +77,13 @@ class BasePage():
         await self.tab.waitForSelector(selector, SELECTORS_OPTIONS)
         return await self.tab.querySelectorAll(selector)
     
+    async def get_element_text(self, element:ElementHandle) -> str:
+        _ = await self.tab.evaluate("(el) => el ? el.textContent : null", element)
+        if _ is None:
+            return ""
+        else:
+            return _.strip().replace("\t", "").replace("\n", "")
+        
 class StudentiaryPage(BasePage):
     def __init__(self, tab, user_data, user_id):
         super().__init__(tab, user_data, user_id)
@@ -115,50 +122,18 @@ class StudentiaryPage(BasePage):
 
         try:
             tbody:ElementHandle = (await self.xpath(f'//span[contains(text(), "{self.user_data['date']}")]/../../..'))[0]
-        except IndexError:
+        except (IndexError, TimeoutError) as e:
             response['success'] = False
-            response['error']['type'] = 'IndexError'
+            response['error']['type'] = type(e).__name__
             response['error']['message'] = 'Не удалось найти элемент таблицы на странице дневника.'
             response['data'] = {}
-
             return response
+
         
         match = re.findall(url_pattern, await(await tbody.getProperty('textContent')).jsonValue())
         if match:
             links += match
-            response['data']['links'] = links
-
-        paperclips = await tbody.querySelectorAll("i.mdi-paperclip")
-        if len(paperclips)>0:
-            await self.tab.evaluate(f"""
-            (el) => {{
-                el.querySelectorAll('i.mdi-paperclip').forEach(paperclip => paperclip.click());                   
-            }}""", tbody)
-
-            await self.tab.waitForFunction(f"""(el)=> {{
-                return el.querySelectorAll('div.attachments div.attach>a').length>0;
-            }}""", {'timeout':5000}, tbody)
-
-
-            file_names:list[str] = await self.tab.evaluate(f"""(el)=>{{
-                const texts = [];
-                const links = el.querySelectorAll('div.attachments div.attach > a');
-                links.forEach((attachment, index) => {{
-                    attachment.click();
-                    if (index % 2 === 0) {{
-                        texts.push(attachment.querySelector('div.name_file').innerText);
-                    }}
-                }});
-                return texts;
-            }}""", tbody)
-            files_paths = [str(Path(DOWNLOAD_PATH)/"files"/str(file_name)) for file_name in file_names]
-            response['data']['schedule']['files'] = files_paths
-
-            await self.tab.evaluate(f"""
-            (el) => {{
-                el.querySelectorAll('i.mdi-paperclip').forEach(paperclip => paperclip.click());                   
-            }}""", tbody)
-
+            response['data']['links'] = links[1::2]
 
         if self.user_data['type']=='screenshot':
             await self.tab.evaluate(
@@ -179,32 +154,54 @@ class StudentiaryPage(BasePage):
             response['data']['schedule']['content'] = screenshot_path
         else:
             rows:list[ElementHandle] = (await tbody.querySelectorAll("tr"))[1:]
-            data = []
+            data = [f"№ | {"НАЗВАНИЕ ПРЕДМЕТА".center(33)} | {"ВРЕМЯ, КАБИНЕТ".center(23)} | ДОМАШНЕЕ ЗАДАНИЕ"]
             for row in rows:
-                les_num:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('td.num_subject'))
-                les_name:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('* > a.subject'))
-                les_task:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('* > div.three_dots')) 
-                les_time_room:str = await self.tab.evaluate("(el) => el ? el.textContent : null", await row.querySelector('* > div.time'))
-
-                if les_num==None: les_num = ""
-                else: les_num = les_num.strip().replace('\n', '').replace('\t', '')
-
-                if les_name==None: les_name = ""
-                else: les_name = les_name.strip().replace('\n', '').replace('\t', '')
-
-                if les_task==None: les_task = ""
-                else: les_task = les_task.strip().replace('\n', '').replace('\t', '')
-
-                if les_time_room==None: les_time_room = ""
-                else: les_time_room = les_time_room.strip().replace('\n', '').replace('\t', '')
+                les_num:str = await self.get_element_text(await row.querySelector('td.num_subject'))
+                les_name:str = await self.get_element_text(await row.querySelector('* > a.subject'))
+                les_task:str = await self.get_element_text(await row.querySelector('* > div.three_dots'))
+                les_time_room:str = await self.get_element_text(await row.querySelector('* > div.time'))
 
                 text = f"{les_num} | {les_name.center(34)} | {les_time_room.center(23)} | {les_task}"
                 data.append(text)
+
             output_string = f'\n\n{"="*150}\n\n'.join(data)
 
             response['success'] = True
             response['data']['schedule']['type'] = 'text'
             response['data']['schedule']['content'] = output_string
+
+        paperclips = (await tbody.querySelectorAll("i.mdi-paperclip"))[1::2]
+        if len(paperclips)>0:
+            await self.tab.evaluate(f"""
+            (el) => {{
+                el.querySelectorAll('i.mdi-paperclip').forEach(paperclip => paperclip.click());                   
+            }}""", tbody)
+
+            await self.tab.waitForFunction(f"""(el)=> {{
+                return el.querySelectorAll('div.attachments div.attach>a').length>0;
+            }}""", {'timeout':5000}, tbody)
+
+            file_names:list[str] = await self.tab.evaluate(f"""(el)=>{{
+                const texts = [];
+                const links = el.querySelectorAll('div.attachments div.attach > a');
+                links.forEach((attachment, index) => {{
+                    attachment.click();
+                    if (index % 2 === 0) {{
+                        texts.push(attachment.querySelector('div.name_file').innerText);
+                    }}
+                }});
+                return texts;
+            }}""", tbody)
+
+            files_paths = [str(Path(DOWNLOAD_PATH)/"files"/str(file_name)) for file_name in file_names]
+            response['data']['schedule']['files'] = files_paths
+
+            while True:
+                list_dir = await FilesManager.list_dir(Path(DOWNLOAD_PATH)/"files")
+                downloaded_files = [file for file in list_dir if not file.endswith(".crdownload")]
+                if len(downloaded_files) == len(file_names) and (not any(file.endswith(".crdownload") for file in list_dir)):
+                    break
+                await asyncio.sleep(0.15)
 
         return response
 
@@ -244,9 +241,7 @@ class LoginPage(BasePage):
         super().__init__(tab, user_data, user_id)
         self.url:str = "https://e-school.obr.lenreg.ru/authorize/login"
 
-
-
-    async def security_check(self):
+    async def security_check(self) -> None:
         try:
             await self.tab.waitForFunction(f'''() => {{
                 const button = document.querySelector('{LoginPage.SECURITY_SKIP_BUTTON}');

@@ -2,7 +2,7 @@ from libs.browserManagerLibs import *
 import time
 
 RED,RESET = '\033[91m','\033[0m'
-DEBUG_MODE = False
+DEBUG_MODE = True
 DOWNLOAD_PATH = Path.cwd()/"temp"
 
 BROWSER_ARGS: dict = {
@@ -61,7 +61,6 @@ class BrowserManager:
         page:StudentiaryPage = await page.go_to_studentiary()
 
         data:dict = await page.get_data(user_path)
-        await page.screenshot(DOWNLOAD_PATH/f"{user_id}"/"screenshots")
         work_time = time.time()-work_start_time
 
         logout_start_time = time.time()
@@ -84,6 +83,7 @@ class BrowserManager:
                 f"+ Closing browser time: {close_time:.2f} sec.\n"
                 f"= = = Full time: {full_time:.2f} sec.\n"
             )
-            return timings
+            data['timings'] = timings
+            return data
         else:
             return data
