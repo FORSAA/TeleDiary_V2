@@ -1,6 +1,6 @@
-from libs.PagesLibs import *
+from Parser.libs.PagesLibs import *
 
-SELECTORS_OPTIONS = {"visible":True, "timeout":10000}
+SELECTORS_OPTIONS = {"visible":True, "timeout":15000}
 
 class BasePage():
     def __init__(self, tab:Page, user_data:dict, user_id:int):

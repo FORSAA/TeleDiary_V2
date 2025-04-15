@@ -1,4 +1,4 @@
-from libs.filesManagerLibs import *
+from Parser.libs.filesManagerLibs import *
 
 class FilesManager():
 

@@ -1,4 +1,4 @@
-from libs.browserManagerLibs import *
+from Parser.libs.browserManagerLibs import *
 import time
 
 RED,RESET = '\033[91m','\033[0m'
@@ -27,11 +27,11 @@ class BrowserManager:
         start_time = time.time()
         browser = await launch(BROWSER_ARGS)
         user_path = str(DOWNLOAD_PATH/f"{user_id}")
-        if not await FilesManager.check_existance(user_path):
-            await FilesManager.make_dir(DOWNLOAD_PATH, f'{user_id}')
-            await FilesManager.make_dir(user_path, "files")
-            await FilesManager.make_dir(user_path, "screenshots")
-
+        # if not await FilesManager.check_existance(user_path):
+        #     await FilesManager.make_dir(DOWNLOAD_PATH, f'{user_id}')
+        #     await FilesManager.make_dir(user_path, "files")
+        #     await FilesManager.make_dir(user_path, "screenshots")
+        
         tab = await browser.newPage()
         await tab.setCookie(
             {
