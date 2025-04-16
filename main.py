@@ -1,4 +1,4 @@
-import asyncio, os, json; os.system("cls")
+import asyncio, os, json, logging; os.system("cls")
 from Telebot.libs.mainLibs import *
 
 # from Parser.middlewares import *
@@ -48,7 +48,7 @@ async def start() -> None:
 
 if __name__ == "__main__":
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(start())
+        logging.basicConfig(level=logging.INFO)
+        asyncio.run(start())
     except KeyboardInterrupt:
         print("Stopping. . .")
