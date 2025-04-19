@@ -9,10 +9,8 @@ class User:
         self.auth_data = states_dict.get('auth_data', None)
         self.wish_type = states_dict.get('wish_type', None)
         self.wish_day = states_dict.get('wish_day', None)
-        self.docs_path_absolute = states_dict.get('docs_path_absolute', None)
-        self.docs_path_relative = states_dict.get('docs_path_relative', None)
-        self.screenshots_path_absolute = states_dict.get('screenshots_path_absolute', None)
-        self.screenshots_path_relative = states_dict.get('screenshots_path_relative', None)
+        self.docs_path = states_dict.get('docs_path', None)
+        self.screenshots_path = states_dict.get('screenshots_path', None)
 
     def __repr__(self):
         states_dict = {

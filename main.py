@@ -1,5 +1,6 @@
 import asyncio, os, json, logging; os.system("cls")
 from Telebot.libs.mainLibs import *
+from Parser.middlewares.filesManager import *
 
 # from Parser.middlewares import *
 
@@ -34,7 +35,7 @@ from Telebot.libs.mainLibs import *
 #         print(f"Во время выполнения запроса возникла ошибка '{response['error']['type']}'.\nТекст ошибки: {response['error']['message']}")
 
 #     await asyncio.sleep(5)
-#     await FilesManager.rmtree(Path.cwd()/"temp"/"55655565")
+#     await FilesManager.clear_dir("temp")
 
 states:dict[int, User] = {}
 TOKEN = os.getenv("TOKEN")
@@ -47,8 +48,14 @@ async def start() -> None:
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        logging.basicConfig(level=logging.INFO)
-        asyncio.run(start())
+        loop.run_until_complete(start())
     except KeyboardInterrupt:
-        print("Stopping. . .")
+        print("\n\nStopping . . .")
+    finally:
+        loop.run_until_complete(FilesManager.clear_dir("temp")); logging.info("Temporary files directory cleared.")
+        loop.close(); logging.info("Loop closed.")
+        logging.info("Correctly stopped.")

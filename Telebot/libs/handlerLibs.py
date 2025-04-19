@@ -4,7 +4,10 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ChatAction
 from aiogram import Router, F
-from main import states
+from main import states, bot
 import asyncio
 
 from Telebot.classes.templates.PageClassTemplates import *
+from Telebot.classes.states.authEditClass import *
+from Telebot.classes.states.homeworkRequestClass import *
+from Telebot.middlewares.telebotFunctions import telebotMiddlewares

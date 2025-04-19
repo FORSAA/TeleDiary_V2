@@ -5,3 +5,4 @@ any_message_router = Router()
 @any_message_router.message(F)
 async def any_message_handler(message:Message):
     await message.delete()
+    print(states[message.from_user.id])

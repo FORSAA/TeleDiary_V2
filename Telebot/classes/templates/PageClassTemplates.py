@@ -1,4 +1,4 @@
-from aiogram.utils.keyboard import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
 
 
@@ -14,6 +14,12 @@ class Page:
                 InlineKeyboardButton(text='Привет!', callback_data='hello')
             ]
         """
+    
+    def get_markup(self, row_width: int = 2) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.add(*self.markup_data)
+        builder.adjust(row_width)
+        return builder.as_markup()
 
 
 StartPage = Page(

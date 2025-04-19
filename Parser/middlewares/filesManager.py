@@ -6,8 +6,13 @@ class FilesManager():
     TEMP_FILES_DIR:str = Path(ABS_BASE_DIR) / 'temp'
 
     @staticmethod
-    async def make_dir(dir_path:str, dir_name:str):
-        await asyncio.to_thread(mkdir, Path(dir_path)/dir_name)
+    async def make_dir(*paths: tuple[str, str]):
+        async def create_dir(dir_path: str, dir_name: str):
+            path = Path(dir_path) / dir_name
+            if not path.exists():
+                await asyncio.to_thread(mkdir, path)
+
+        await asyncio.gather(*(create_dir(p, n) for p, n in paths))
 
     @staticmethod
     async def make_dirs(dir_path:str):
