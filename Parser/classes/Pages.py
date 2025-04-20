@@ -107,7 +107,9 @@ class StudentiaryPage(BasePage):
 
         links, url_pattern = [], re.compile(r'https?://\S+')
 
+        # await self.tab.waitForFunction("document.readyState === 'complete'")
         await self.wait_for_element('select.week_select')
+        await asyncio.sleep(0.2)
         date = await convert_to_full_date(self.user_data['date'])
         object_id = await get_object_id_from_date(date)
 
@@ -163,7 +165,7 @@ class StudentiaryPage(BasePage):
                 text = f"{les_num} | {les_name.center(34)} | {les_time_room.center(23)} | {les_task}"
                 data.append(text)
 
-            output_string = f'\n\n{"="*150}\n\n'.join(data)
+            output_string = f'\n\n{"="*34}\n\n'.join(data)
 
             response['success'] = True
             response['data']['schedule']['type'] = 'text'

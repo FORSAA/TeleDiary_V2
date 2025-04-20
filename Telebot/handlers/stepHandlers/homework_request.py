@@ -79,5 +79,6 @@ async def handle_type(callback:CallbackQuery, state:FSMContext):
         
         await FilesManager.clear_dir(f"temp/{user_id}/files", f"temp/{user_id}/screenshots")
     else:
-        await bot.send_message(f"Во время выполнения запроса возникла ошибка '{response['error']['type']}'.\nТекст ошибки: {response['error']['message']}")
+        await bot.send_message(user_id, f"Во время выполнения запроса возникла ошибка '{response['error']['type']}'.\nТекст ошибки: {response['error']['message']}")
+    await state.clear()
     await telebotMiddlewares.render(callback, StartPage)

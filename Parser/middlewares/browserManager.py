@@ -6,7 +6,7 @@ DEBUG_MODE = False
 DOWNLOAD_PATH = Path.cwd()/"temp"
 
 BROWSER_ARGS: dict = {
-    'headless': True,
+    'headless': False,
     'args': [
         '--disable-infobars',
         '--disable-features=DownloadBubble',
@@ -27,10 +27,6 @@ class BrowserManager:
         start_time = time.time()
         browser = await launch(BROWSER_ARGS)
         user_path = str(DOWNLOAD_PATH/f"{user_id}")
-        # if not await FilesManager.check_existance(user_path):
-        #     await FilesManager.make_dir(DOWNLOAD_PATH, f'{user_id}')
-        #     await FilesManager.make_dir(user_path, "files")
-        #     await FilesManager.make_dir(user_path, "screenshots")
         
         tab = await browser.newPage()
         await tab.setCookie(
@@ -53,7 +49,7 @@ class BrowserManager:
         login_time = time.time() - login_start_time
 
         work_start_time = time.time()
-        if isinstance(result, HomePage): # Если не удалось войти на сайт - False и возвращение ошибки. Ошибку обрабатывает внешняя логика в main.py.
+        if isinstance(result, HomePage):
             page: HomePage = result
         else:
             await browser.close()
