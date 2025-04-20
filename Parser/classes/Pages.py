@@ -165,7 +165,7 @@ class StudentiaryPage(BasePage):
                 text = f"{les_num} | {les_name.center(34)} | {les_time_room.center(23)} | {les_task}"
                 data.append(text)
 
-            output_string = f'\n\n{"="*34}\n\n'.join(data)
+            output_string = f'\n\n{"="*45}\n\n'.join(data)
 
             response['success'] = True
             response['data']['schedule']['type'] = 'text'

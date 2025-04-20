@@ -74,7 +74,7 @@ async def handle_type(callback:CallbackQuery, state:FSMContext):
             if links:
                 await bot.send_message(user_id, 'Дополнительные ссылки:\n'+'\n'.join(links))
         else:
-            await bot.send_message(user_id, response_content)
+            await bot.send_message(user_id, f'<pre>{response_content}</pre>', parse_mode="HTML")
         
         if files:
             media = []
