@@ -9,9 +9,9 @@ class FilesManager():
     async def make_dir(*paths: tuple[str, str]):
         async def create_dir(dir_path: str, dir_name: str):
             path = Path(dir_path) / dir_name
-            await asyncio.to_thread(makedirs, path)
+            await asyncio.to_thread(makedirs, path, exist_ok=True)
 
-        await asyncio.gather(*(create_dir(p, n) for p, n in paths))
+        await asyncio.gather(*(create_dir(p, n) for p, n in paths), return_exceptions=False)
 
     @staticmethod
     async def make_dirs(dir_path:str):

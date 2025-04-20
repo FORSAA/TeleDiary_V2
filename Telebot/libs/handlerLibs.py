@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ChatAction
 from aiogram import Router, F
 from main import states, bot
-import asyncio
+import asyncio, logging
 
 from Telebot.classes.templates.PageClassTemplates import *
 from Telebot.classes.templates.UserClassTemplate import *

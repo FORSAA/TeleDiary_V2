@@ -187,9 +187,7 @@ class StudentiaryPage(BasePage):
                 const links = el.querySelectorAll('div.attachments div.attach > a');
                 links.forEach((attachment, index) => {{
                     attachment.click();
-                    if (index % 2 === 0) {{
-                        texts.push(attachment.querySelector('div.name_file').innerText);
-                    }}
+                    texts.push(attachment.querySelector('div.name_file').innerText);
                 }});
                 return texts;
             }}""", tbody))
@@ -200,9 +198,10 @@ class StudentiaryPage(BasePage):
             while True:
                 list_dir = await FilesManager.list_dir(Path(DOWNLOAD_PATH)/"files")
                 downloaded_files = [file for file in list_dir if not file.endswith(".crdownload")]
-                if len(downloaded_files) == len(file_names) and (not any(file.endswith(".crdownload") for file in list_dir)):
+                logging.info(f"Waiting for downlad files: {len(downloaded_files)}/{len(file_names)} | file_names = {file_names}")
+                if len(downloaded_files) >= len(file_names) and (not any(file.endswith(".crdownload") for file in list_dir)):
                     break
-                await asyncio.sleep(0.15)
+                await asyncio.sleep(0.5)
         return response
 
 class HomePage(BasePage):

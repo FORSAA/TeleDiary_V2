@@ -1,4 +1,4 @@
-import asyncio, os, ast
+import asyncio, os, ast, psutil
 from pyppeteer import *
 import asyncstdlib as astd
 from pyppeteer.browser import Browser

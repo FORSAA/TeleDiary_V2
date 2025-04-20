@@ -15,8 +15,8 @@ BROWSER_ARGS: dict = {
         # '--start-fullscreen'
     ],
     'defaultViewport': {
-        'width':3125,
-        'height':2205,
+        'width':5000,
+        'height':5000,
     }
 }
 
@@ -26,6 +26,11 @@ class BrowserManager:
     async def get_homework(request_data: dict, user_id:int):
         start_time = time.time()
         browser = await launch(BROWSER_ARGS)
+
+        for proc in psutil.process_iter(['pid', 'name']):
+            if 'chrome' in proc.info['name'].lower():
+                proc.nice(psutil.HIGH_PRIORITY_CLASS)
+
         user_path = str(DOWNLOAD_PATH/f"{user_id}")
         
         tab = await browser.newPage()
@@ -82,5 +87,4 @@ class BrowserManager:
             data['timings'] = timings
             return data
         else:
-            print("returning data")
             return data
