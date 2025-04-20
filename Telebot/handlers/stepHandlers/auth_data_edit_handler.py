@@ -35,6 +35,8 @@ async def password_sent(message: Message, state: FSMContext):
     await user.bot_last_message.delete()
 
     user_data = await state.get_data()
+    await state.clear()
+
     login = user_data['login']
     password = user_data['password']
 
@@ -52,5 +54,3 @@ async def password_sent(message: Message, state: FSMContext):
 
     await asyncio.sleep(2)
     await telebotMiddlewares.render(message, StartPage) #, del_user_prev=False
-
-    await state.clear()

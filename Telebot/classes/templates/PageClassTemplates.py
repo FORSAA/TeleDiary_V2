@@ -53,23 +53,23 @@ HelpPage = Page(
     ]
 )
 
-GetHomeworkPage = Page(
-    name='get_homework',
+TypeSelectPage = Page(
+    name='type_seelct_page',
     message_text='Выберите в каком формате бот должен прислать вам домашнее задание:',
     markup_data=[
-        InlineKeyboardButton(text='Фотография', callback_data='screenshot'),
-        InlineKeyboardButton(text='Текст', callback_data='text'),
+        InlineKeyboardButton(text='Фотография', callback_data='type:screenshot'),
+        InlineKeyboardButton(text='Текст', callback_data='type:text'),
         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu')
     ]
 )
 
-DaySelectPage = Page(
-    name='day_select_page',
-    message_text='Выберите день, домашнее задание для которого вас интересует:',
-    markup_data=[
-        InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu'),
-    ]
-)
+# DaySelectPage = Page(
+#     name='day_select_page',
+#     message_text='Выберите день, домашнее задание для которого вас интересует:',
+#     markup_data=[
+#         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu'),
+#     ]
+# )
 
 AboutPage = Page(
     name='about_page',

@@ -2,11 +2,11 @@ from Parser.libs.browserManagerLibs import *
 import time
 
 RED,RESET = '\033[91m','\033[0m'
-DEBUG_MODE = True
+DEBUG_MODE = False
 DOWNLOAD_PATH = Path.cwd()/"temp"
 
 BROWSER_ARGS: dict = {
-    'headless': False,
+    'headless': True,
     'args': [
         '--disable-infobars',
         '--disable-features=DownloadBubble',
@@ -86,4 +86,5 @@ class BrowserManager:
             data['timings'] = timings
             return data
         else:
+            print("returning data")
             return data

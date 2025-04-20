@@ -89,7 +89,6 @@ class StudentiaryPage(BasePage):
         super().__init__(tab, user_data, user_id)
 
     async def get_data(self, DOWNLOAD_PATH:str) -> dict:
-
         response = {
             'success':None,
             'error':{
@@ -181,7 +180,7 @@ class StudentiaryPage(BasePage):
                 return el.querySelectorAll('div.attachments div.attach>a').length>0;
             }}""", {'timeout':5000}, tbody)
 
-            file_names:list[str] = await self.tab.evaluate(f"""(el)=>{{
+            file_names:set[str] = set(await self.tab.evaluate(f"""(el)=>{{
                 const texts = [];
                 const links = el.querySelectorAll('div.attachments div.attach > a');
                 links.forEach((attachment, index) => {{
@@ -191,7 +190,7 @@ class StudentiaryPage(BasePage):
                     }}
                 }});
                 return texts;
-            }}""", tbody)
+            }}""", tbody))
 
             files_paths = [str(Path(DOWNLOAD_PATH)/"files"/str(file_name)) for file_name in file_names]
             response['data']['schedule']['files'] = files_paths
@@ -202,7 +201,6 @@ class StudentiaryPage(BasePage):
                 if len(downloaded_files) == len(file_names) and (not any(file.endswith(".crdownload") for file in list_dir)):
                     break
                 await asyncio.sleep(0.15)
-
         return response
 
 class HomePage(BasePage):

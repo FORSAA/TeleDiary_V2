@@ -1,4 +1,4 @@
-import asyncio, os, json, logging, locale; os.system("cls")
+import asyncio, os, json, logging, locale, ast; os.system("cls")
 from Telebot.libs.mainLibs import *
 from Parser.middlewares.filesManager import *
 

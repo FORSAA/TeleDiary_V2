@@ -12,14 +12,15 @@ class telebotMiddlewares:
         
         buttons = [
             InlineKeyboardButton(
-                text=f"{d.strftime('%A')}: {d.day} {d.strftime('%B')}",
-                callback_data=f"{d.strftime('%d %B')}"
+                text=f"{d.strftime('%B')}, {d.day}-е",
+                callback_data=f"date:{d.strftime('%e %B').lower()}"
             )
             for d in dates
         ]
 
         nav_buttons = [
             InlineKeyboardButton(text="<<<", callback_data=f"week:{(week_ref - timedelta(days=7)).strftime('%Y-%m-%d')}"),
+            InlineKeyboardButton(text=" ", callback_data="-"),
             InlineKeyboardButton(text=">>>", callback_data=f"week:{(week_ref + timedelta(days=7)).strftime('%Y-%m-%d')}")
         ]
 
@@ -78,7 +79,7 @@ class telebotMiddlewares:
 
         await message.edit_text(
             text=page.message_text,
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=page.get_markup(row_width))
+            reply_markup=page.get_markup(row_width)
         )
 
         if isinstance(data, CallbackQuery):
