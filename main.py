@@ -1,4 +1,4 @@
-import asyncio, os, json, logging; os.system("cls")
+import asyncio, os, json, logging, locale; os.system("cls")
 from Telebot.libs.mainLibs import *
 from Parser.middlewares.filesManager import *
 
@@ -36,6 +36,8 @@ from Parser.middlewares.filesManager import *
 
 #     await asyncio.sleep(5)
 #     await FilesManager.clear_dir("temp")
+
+locale.setlocale(locale.LC_TIME, 'Russian_Russia.1251')
 
 states:dict[int, User] = {}
 TOKEN = os.getenv("TOKEN")

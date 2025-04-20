@@ -1,7 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
 
-
 class Page:
     def __init__(self, name: str, message_text: str, markup_data: list[InlineKeyboardButton] = []):
         self.name = name
@@ -20,6 +19,7 @@ class Page:
         builder.add(*self.markup_data)
         builder.adjust(row_width)
         return builder.as_markup()
+
 
 
 StartPage = Page(
@@ -57,22 +57,16 @@ GetHomeworkPage = Page(
     name='get_homework',
     message_text='Выберите в каком формате бот должен прислать вам домашнее задание:',
     markup_data=[
-        InlineKeyboardButton(text='Фотография', callback_data='homework_wish_photo'),
-        InlineKeyboardButton(text='Текст', callback_data='homework_wish_text'),
+        InlineKeyboardButton(text='Фотография', callback_data='screenshot'),
+        InlineKeyboardButton(text='Текст', callback_data='text'),
         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu')
     ]
 )
 
 DaySelectPage = Page(
     name='day_select_page',
-    message_text='Выберите день недели домашнее задание для которого вас интересует:',
+    message_text='Выберите день, домашнее задание для которого вас интересует:',
     markup_data=[
-        InlineKeyboardButton(text='Понедельник', callback_data='0_day'),
-        InlineKeyboardButton(text='Четверг', callback_data='3_day'),
-        InlineKeyboardButton(text='Вторник', callback_data='1_day'),
-        InlineKeyboardButton(text='Пятница', callback_data='4_day'),
-        InlineKeyboardButton(text='Среда', callback_data='2_day'),
-        InlineKeyboardButton(text='Суббота', callback_data='5_day'),
         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu'),
     ]
 )
