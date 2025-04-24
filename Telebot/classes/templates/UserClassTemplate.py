@@ -11,6 +11,7 @@ class User:
         self.wish_day = states_dict.get('wish_day', None)
         self.docs_path = states_dict.get('docs_path', None)
         self.screenshots_path = states_dict.get('screenshots_path', None)
+        self.started = states_dict.get("started", False)
 
     def __repr__(self):
         states_dict = {

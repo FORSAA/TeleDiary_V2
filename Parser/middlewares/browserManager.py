@@ -9,14 +9,21 @@ BROWSER_ARGS: dict = {
     'headless': False,
     'args': [
         '--disable-infobars',
-        '--disable-features=DownloadBubble',
+        '--no-sandbox',
+        '--disable-popup-blocking',
+        '--safebrowsing-disable-download-protection',
+        '--disable-features=DownloadBubble,DownloadBubbleV2',
         '-disable-animations',
         '--disable-software-rasterizer',
+        '--disable-infobars',
+        '--disable-web-security',
+        '--disable-extensions',
+        '--disable-popup-blocking',
         # '--start-fullscreen'
     ],
     'defaultViewport': {
-        'width':5000,
-        'height':5000,
+        'width':1000,
+        'height':740,
     }
 }
 
@@ -44,7 +51,7 @@ class BrowserManager:
         client = await tab.target.createCDPSession()
         await client.send('Page.setDownloadBehavior', {
             'behavior': 'allow',
-            'downloadPath':str(Path(user_path)/"files")
+            'downloadPath':str(Path(user_path)/"files"),
         })
         ready_time = time.time() - start_time
         page = LoginPage(tab, request_data, user_id)
@@ -59,7 +66,11 @@ class BrowserManager:
         else:
             await browser.close()
             return result
-        page:StudentiaryPage = await page.go_to_studentiary()
+        
+        if page.url != 'https://e-school.obr.lenreg.ru/app/school/studentdiary/':
+            page:StudentiaryPage = await page.go_to_studentiary()
+        else:
+            page:StudentiaryPage = StudentiaryPage(tab, request_data, user_id)
 
         data:dict = await page.get_data(user_path)
         work_time = time.time()-work_start_time

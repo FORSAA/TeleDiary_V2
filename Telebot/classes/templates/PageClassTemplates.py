@@ -39,14 +39,15 @@ AuthDataEditPage = Page(
                  f'Вы должны ввести ваш логин и пароль <u>двумя</u> <u>отдельными</u> сообщениями (Первым логин, вторым пароль). Бот ожидает ввода.\n\n'
                  f'P.S: <b><i>Отправляя свои данные авторизации вы делаете это добровольно и соглашаетесь с их обработкой.</i></b>"',
     markup_data=[
-        InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu')
+        InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu'),
+        InlineKeyboardButton(text='Удалить данные авторизации', callback_data='de_auth')
     ]
 )
 
 HelpPage = Page(
     name='help_page',
     message_text='Как пользоваться ботом? Очень легко!\n\n'
-                 'Для начала использования бота достаточно ввести логин и пароль от сайта ГИССОЛО на странице "Смена логина/пароля". (Кнопка "Смена Логина/Пароля").\n\n'
+                 'Для начала использования бота достаточно ввести логин и пароль от сайта ГИССОЛО на странице <i>"Смена логина/пароля"</i>. (Кнопка "Смена Логина/Пароля" в главном меню /start).\n\n'
                  'После выполнения этого шага вы можете перейти в <i>"Получить Д/З"</i>, выбрать формат и день недели. Ваш запрос будет обработан.',
     markup_data=[
         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu')
@@ -54,8 +55,8 @@ HelpPage = Page(
 )
 
 TypeSelectPage = Page(
-    name='type_seelct_page',
-    message_text='Выберите в каком формате бот должен прислать вам домашнее задание:',
+    name='type_select_page',
+    message_text='Выберите формат ответа бота:',
     markup_data=[
         InlineKeyboardButton(text='Фотография', callback_data='type:screenshot'),
         InlineKeyboardButton(text='Текст', callback_data='type:text'),
@@ -63,20 +64,13 @@ TypeSelectPage = Page(
     ]
 )
 
-# DaySelectPage = Page(
-#     name='day_select_page',
-#     message_text='Выберите день, домашнее задание для которого вас интересует:',
-#     markup_data=[
-#         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu'),
-#     ]
-# )
 
 AboutPage = Page(
     name='about_page',
-    message_text='Годовой проект создан учеником класса 9.4 школы МОБУ "СОШ "ЦО "Кудрово", Захаровым Егором.\n\n'
+    message_text='Годовой проект создан учеником класса 10.1 школы МОБУ "СОШ "ЦО "Кудрово", Захаровым Егором.\n\n'
                  '<b>Telegram</b>: https://t.me/Unsaint_d\n'
-                 '<b>Discord</b>: unsaint_d\n'
-                 '<b>VK</b>: https://vk.com/ilnkar',
+                 '<b>VK</b>: https://vk.com/unsaint_d'
+                 '<b>Discord</b>: unsaint_d\n',
     markup_data=[
         InlineKeyboardButton(text='« Вернуться в главное меню', callback_data='menu')
     ]
@@ -84,8 +78,8 @@ AboutPage = Page(
 )
 
 AwaitPage = Page(
-    name='help_page',
-    message_text='Запрос отправлен! Ожидайте ответ бота.',
+    name='await_page',
+    message_text='Запрос отправлен!\n\nОжидайте скорый ответ бота!',
     markup_data=[
     ]
 )

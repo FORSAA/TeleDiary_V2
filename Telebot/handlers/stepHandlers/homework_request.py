@@ -1,6 +1,13 @@
+import logging
 from Telebot.libs.handlerLibs import *
 from Parser.middlewares.browserManager import BrowserManager
 from Parser.middlewares.filesManager import FilesManager
+
+logger = logging.getLogger("requests")
+logger.setLevel(logging.INFO)
+# logger.propagate = False
+
+RESTRICTED_DOC = (".webp")
 
 months = {
     'январь': 'января', 'февраль': 'февраля', 'март': 'марта', 'апрель': 'апреля',
@@ -44,7 +51,7 @@ async def handle_type(callback:CallbackQuery, state:FSMContext):
     request_day:str = request_data['day']
     request_type:str = request_data['type']
 
-    logging.info(f"REQUEST BY: {user_id} | Day: {request_day} | Type: {request_type}")
+    logger.info(f"REQUEST BY: {user_id} | Day: {request_day} | Type: {request_type}")
     
     request = {
         'auth_data' : user.auth_data,
@@ -61,26 +68,31 @@ async def handle_type(callback:CallbackQuery, state:FSMContext):
 
     response = await BrowserManager.get_homework(request, user_id)
 
-    logging.info(f"REQUEST by USER #{user_id} WAS COMPLETED. SUCCESS: {response['success']}")
+    logger.info(f"REQUEST by USER #{user_id} WAS COMPLETED. SUCCESS: {response['success']}")
 
     if response['success']:
         links = response['data']['links']
         files = response['data']['schedule']['files']
         response_type = response['data']['schedule']['type']
         response_content = response['data']['schedule']['content']
-        logging.info(f"RESPONSE CONTENT | Response_type: {response_type} | Response_content: {response_content} | Links: {links} | Files: {files}")
+        logger.info(f"RESPONSE CONTENT | Response_type: {response_type} | Response_content: {response_content} | Links: {links} | Files: {files}")
         if response_type=='screenshot':
             await bot.send_photo(user_id, FSInputFile(response_content))
             if links:
-                await bot.send_message(user_id, 'Дополнительные ссылки:\n'+'\n'.join(links))
+                await bot.send_message(user_id, 'Дополнительные ссылки:\n▹ '+'\n▹ '.join(set(links)))
         else:
             await bot.send_message(user_id, f'<pre>{response_content}</pre>', parse_mode="HTML")
         
         if files:
-            media = []
-            for file in files:
-                media.append(InputMediaDocument(type='document', media=FSInputFile(file)))
-            await bot.send_media_group(user_id, media=media)
+            files: list[str] = [file for file in files if not file.lower().endswith(RESTRICTED_DOC)]
+            media_items = [
+                InputMediaDocument(media=FSInputFile(path=file_path))
+                for file_path in files
+            ]
+            for i in range(0, len(media_items), 9):
+                chunk = media_items[i : i + 9]
+                await bot.send_media_group(chat_id=user_id, media=chunk)
+                await asyncio.sleep(1)
         
         await FilesManager.clear_dir(f"temp/{user_id}/files", f"temp/{user_id}/screenshots")
     else:
