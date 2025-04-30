@@ -49,10 +49,9 @@ class telebotMiddlewares:
         return states[user_id]
     
     @staticmethod
-    async def render(data:Message | CallbackQuery, page: Page, del_prev: bool = True, del_user_prev: bool = True, row_width:int = 2, *args:str) -> None:
+    async def render(data:Message | CallbackQuery, page: Page, del_prev: bool = True, del_user_prev: bool = True, row_width:int = 2, extra_text:str = '') -> None:
         user_id = data.from_user.id
         user: User = await telebotMiddlewares._get_user(user_id)
-        
 
         incoming_message: Message = data.message if isinstance(data, CallbackQuery) else data
                 
@@ -68,7 +67,7 @@ class telebotMiddlewares:
             except:
                 pass
         
-        sent_message = await bot.send_message(chat_id=user_id, text=page.message_text + ''.join(args), reply_markup=page.get_markup(row_width), parse_mode="HTML")
+        sent_message = await bot.send_message(chat_id=user_id, text=page.message_text + extra_text, reply_markup=page.get_markup(row_width), parse_mode="HTML")
 
         user.menu_state = page.name
         user.bot_last_message = sent_message

@@ -152,12 +152,12 @@ class StudentiaryPage(BasePage):
             screenshot_path = str(Path(DOWNLOAD_PATH)/"screenshots"/"schedule_screenshot.png")
 
             await self.tab.waitForFunction('el => document.body.contains(el)', {"polling":"mutation"}, tbody)
-
+            await asyncio.sleep(0.15)
             await tbody.screenshot(
                 options={
                     "path":screenshot_path 
                 }
-            )
+            ) 
             response['success'] = True
             response['data']['schedule']['type'] = 'screenshot'
             response['data']['schedule']['content'] = screenshot_path
@@ -179,17 +179,16 @@ class StudentiaryPage(BasePage):
             response['data']['schedule']['type'] = 'text'
             response['data']['schedule']['content'] = output_string
 
-        paperclips = (await tbody.querySelectorAll("i.mdi-paperclip"))
-        logger.info(f"Paperclips found: {len(paperclips)}")
+        paperclips = await tbody.querySelectorAll("i.mdi-paperclip")
         if len(paperclips)>0:
             await self.tab.evaluate(f"""
             (el) => {{
                 el.querySelectorAll("i.mdi-paperclip").forEach(paperclip => paperclip.click());                   
-            }}""", tbody); logger.info("Paperclips clicked")
+            }}""", tbody)
 
             await self.tab.waitForFunction(f"""(el)=> {{
                 return el.querySelectorAll('div.attachments div.attach>a').length>0;
-            }}""", {'timeout':5000}, tbody); logger.info("Waiting for a's")
+            }}""", {'timeout':5000}, tbody)
 
             # file_names:set[str] = set(await self.tab.evaluate(f"""(el)=>{{
             #     const texts = [];
@@ -201,7 +200,7 @@ class StudentiaryPage(BasePage):
             #     return texts;
             # }}""", tbody))
 
-            attachment_links = await tbody.querySelectorAll('div.attachments div.attach > a')
+            attachment_links = set(await tbody.querySelectorAll('div.attachments div.attach > a'))
             file_names = set()
 
             for link in attachment_links:
@@ -211,29 +210,7 @@ class StudentiaryPage(BasePage):
                     file_names.add(name)
 
                 await self.tab.evaluate('(el) => el.click()', link)
-                await asyncio.sleep(0.05)  
-
-            # client = self.tab._client
-
-            # expression = """
-            # (el) => {
-            #     const links = el.querySelectorAll('div.attachments div.attach > a');
-            #     links.forEach(a => a.click());
-            #     return [...links].map(a => a.querySelector('div.name_file').innerText);
-            # }
-            # """
-
-            # result = await client.send('Runtime.evaluate', {
-            #     'expression': f'({expression})(arguments[0])',
-            #     'arguments': [{'objectId': tbody._remoteObject["objectId"]}],
-            #     'returnByValue': True,
-            #     'awaitPromise': True,
-            #     'userGesture': True
-            # })
-
-            # file_names = set(result.get('result', {}).get('value', []))
-
-            
+                await asyncio.sleep(0.1)  
             files_paths = [str(Path(DOWNLOAD_PATH)/"files"/str(file_name)) for file_name in file_names]
             response['data']['schedule']['files'] = files_paths
 
@@ -243,7 +220,7 @@ class StudentiaryPage(BasePage):
                 logger.info(f"Waiting for downlad files: {len(downloaded_files)}/{len(file_names)} | file_names = {file_names}")
                 if len(downloaded_files) >= len(file_names) and (not any(file.endswith(".crdownload") for file in list_dir)):
                     break
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.25)
         return response
 
 class HomePage(BasePage):

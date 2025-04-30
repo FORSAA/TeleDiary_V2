@@ -41,15 +41,15 @@ async def handle_type(callback:CallbackQuery, state:FSMContext):
     await callback.answer('')
 
     await state.update_data(type = callback.data.split(":")[1])
-    
-    await telebotMiddlewares.render(callback, AwaitPage)
-
-    user_id = callback.from_user.id
-    user:User = await telebotMiddlewares._get_user(user_id)
 
     request_data = await state.get_data()
     request_day:str = request_data['day']
     request_type:str = request_data['type']
+
+    await telebotMiddlewares.render(callback, AwaitPage, extra_text=f" Собираем данные на <i>{request_day}</i>. Выбранный формат: <i>{request_type}</i>.")
+    user_id = callback.from_user.id
+    user:User = await telebotMiddlewares._get_user(user_id)
+
 
     logger.info(f"REQUEST BY: {user_id} | Day: {request_day} | Type: {request_type}")
     
@@ -96,6 +96,6 @@ async def handle_type(callback:CallbackQuery, state:FSMContext):
         
         await FilesManager.clear_dir(f"temp/{user_id}/files", f"temp/{user_id}/screenshots")
     else:
-        await bot.send_message(user_id, f"Во время выполнения запроса возникла ошибка '{response['error']['type']}'.\nТекст ошибки: {response['error']['message']}")
+        await bot.send_message(user_id, f"Во время выполнения запроса возникла ошибка '{response['error']['type']}':\n• {response['error']['message']}\n\nВыполните запрос снова.")
     await state.clear()
     await telebotMiddlewares.render(callback, StartPage)
