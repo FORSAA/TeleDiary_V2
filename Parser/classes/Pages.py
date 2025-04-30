@@ -132,7 +132,7 @@ class StudentiaryPage(BasePage):
         except (IndexError, TimeoutError) as e:
             response['success'] = False
             response['error']['type'] = type(e).__name__
-            response['error']['message'] = 'Не удалось найти элемент таблицы на странице дневника.'
+            response['error']['message'] = 'Не удалось получить данные из таблицы заданий (Ошибка на стороне сервера портала школы).'
             response['data'] = {}
             return response
         
@@ -319,8 +319,8 @@ class LoginPage(BasePage):
             response = {
                 'success':False,
                 'error':{
-                    'type':'TimeoutError',
-                    'message':'Ошибка авторизации - Неверный логин/пароль или отказано в доступе на сайт по другой, неизвестной причине.\n'
+                    'type':'Ошибка авторизации',
+                    'message':'Неверный логин/пароль или отказано в доступе на сайт по другой, неизвестной причине.\n'
                 },
                 'data':{}
             }

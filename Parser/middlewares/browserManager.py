@@ -6,7 +6,7 @@ DEBUG_MODE = False
 DOWNLOAD_PATH = Path.cwd()/"temp"
 
 BROWSER_ARGS: dict = {
-    'headless': False,
+    'headless': True,
     'args': [
         '--disable-infobars',
         '--no-sandbox',
